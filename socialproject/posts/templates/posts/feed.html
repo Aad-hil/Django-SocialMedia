@@ -1,0 +1,169 @@
+{% extends 'users/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% block body %}
+
+<div class="min-h-screen bg-gray-100 py-8">
+    <div class="container mx-auto px-4">
+        <!-- Page Title -->
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">My Posts</h1>
+
+        <!-- Posts List -->
+        <div class="space-y-6 mx-auto max-w-2xl">
+            {% for post in posts %}
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden" id="post-{{ post.id }}">
+                <!-- Profile Photo & Username -->
+                <div class="flex items-center px-4 py-4 bg-gray-50">
+                    <img src="{{ post.user.profile.photo.url }}" alt="Profile Picture" class="w-10 h-10 rounded-full object-cover border-2 border-gray-300 mr-3">
+                    <p class="text-gray-800 font-semibold"><span class="text-indigo-500">{{ post.user }}</span></p>
+                </div>
+
+                <!-- Post Image -->
+                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full object-cover">
+
+                <!-- Post Content -->
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">{{ post.title }}</h2>
+
+                    <!-- Like Count -->
+                    <div id="like-text-{{ post.id }}" class="mb-4 text-sm text-gray-700">
+                        {% if post.liked_by.count == 1 %}
+                        {{ post.liked_by.first }} likes this
+                        {% elif post.liked_by.count > 1 %}
+                        {{ post.liked_by.first }} & {{ post.liked_by.count|add:"-1" }} others like this
+                        {% endif %}
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <!-- Like Button -->
+                        <a id="like-btn-{{ post.id }}" class="btn-like flex items-center space-x-2 text-gray-500 hover:text-red-500 transition">
+                            {% if logged_user in post.liked_by.all %}
+                            <img src="{% static 'users/images/redlike.png' %}" alt="Unlike" class="w-6 h-6">
+                            {% else %}
+                            <img src="{% static 'users/images/like.png' %}" alt="Like" class="w-6 h-6">
+                            {% endif %}
+                        </a>
+
+                        <!-- Comments Button -->
+                        <button class="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition" onclick="toggleComments({{ post.id }})">
+                            <img src="{% static 'users/images/comments.png' %}" alt="Comment" class="w-6 h-6">
+                            <span class="text-sm">Comment</span>
+                        </button>
+
+                        <!-- Share Button -->
+                        <button class="flex items-center space-x-2 text-gray-500 hover:text-green-500 transition" onclick="handleShare({{ post.id }})">
+                            <img src="{% static 'users/images/share.png' %}" alt="Share" class="w-6 h-6">
+                            <span class="text-sm">Share</span>
+                        </button>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div id="comments-section-{{ post.id }}" class="hidden mt-4">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                            <h3 class="text-md font-semibold text-gray-700 mb-2">Comments</h3>
+                            <div class="space-y-3">
+                                {% for comment in post.comments.all %}
+                                <div class="flex items-start space-x-3">
+                                    <!-- User Profile Picture -->
+                                    <img
+                                        src="{{ comment.user.profile.photo.url }}"
+                                        alt="{{ comment.user }}"
+                                        class="w-8 h-8 rounded-full object-cover border border-gray-300">
+
+                                    <!-- Comment Content -->
+                                    <div>
+                                        <!-- User Name -->
+                                        <p class="text-gray-800 text-sm font-semibold">
+                                            {{ comment.user }}
+                                        </p>
+                                        <!-- Comment Body -->
+                                        <p class="text-gray-600 text-sm">
+                                            {{ comment.body }}
+                                        </p>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="text-gray-600 text-sm italic">No comments yet.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Comment Form -->
+                        <form method="post" class="mt-4">
+                            {% csrf_token %}
+                            <div class="flex items-start space-x-3">
+                                <!-- Logged User Profile Picture -->
+                                <img
+                                    src="{{ logged_user.profile.photo.url }}"
+                                    alt="Your Profile"
+                                    class="w-8 h-8 rounded-full object-cover border border-gray-300">
+
+                                <!-- Comment Input -->
+                                <textarea
+                                    name="body"
+                                    placeholder="Write a comment..."
+                                    class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    rows="1"
+                                    required></textarea>
+
+                                <!-- Submit Button -->
+                                <button
+                                    type="submit"
+                                    class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
+                                    Add
+                                </button>
+                            </div>
+                            <input type="hidden" name="post_id" value="{{ post.id }}">
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle toggling comments section visibility
+    function toggleComments(postId) {
+        const commentsSection = document.getElementById(`comments-section-${postId}`);
+        commentsSection.classList.toggle('hidden');
+    }
+
+    // Handle sharing functionality (to be customized)
+    function handleShare(postId) {
+        console.log(`Post ${postId} shared!`);
+    }
+
+    // Handle like/unlike functionality
+    $(document).on('click', '.btn-like', function () {
+        var post_id = this.id.split('-')[2]; // Extract post ID
+        var likeBtn = $(this); // Reference to the clicked button
+        var csrfToken = "{{ csrf_token }}"; // Get CSRF token
+
+        $.ajax({
+            method: "POST",
+            url: "{% url 'liked_post' %}", // URL for the like view
+            data: {
+                post_id: post_id,
+                csrfmiddlewaretoken: csrfToken,
+            },
+            success: function (response) {
+                // Toggle the like icon based on the response
+                if (response.liked) {
+                    likeBtn.find('img').attr('src', "{% static 'users/images/redlike.png' %}");
+                } else {
+                    likeBtn.find('img').attr('src', "{% static 'users/images/like.png' %}");
+                }
+
+                // Update the like text (count of likes)
+                $('#like-text-' + post_id).text(response.like_count + (response.like_count == 1 ? ' Like this' : ' Likes this'));
+            },
+            error: function (error) {
+                alert("An error occurred! Please try again later.");
+            }
+        });
+    });
+</script>
+
+{% endblock %}

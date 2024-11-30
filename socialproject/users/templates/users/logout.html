@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logged Out</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .message-box {
+            text-align: center;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        p {
+            margin: 0 0 20px;
+            font-size: 16px;
+        }
+        .redirect-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .redirect-link:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        // Redirect to login page after 5 seconds
+        setTimeout(function () {
+            window.location.href = '/login/';
+        }, 5);
+    </script>
+</head>
+<body>
+    <div class="message-box">
+        <h1>You have been logged out successfully.</h1>
+        <p>You will be redirected to the login page shortly.</p>
+        <a href="/login/" class="redirect-link">Go to Login Page</a>
+    </div>
+</body>
+</html>
